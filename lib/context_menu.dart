@@ -1,23 +1,39 @@
 // ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 class ContextMenu extends StatefulWidget {
-  const ContextMenu() : super();
+  _ContextMenuState state;
+
+  ContextMenu({Key key}) : super(key: key);
+
+  void showMenu(GlobalKey widgetKey) {
+    state.showMenu(widgetKey);
+  }
+
+  void hideMenu() {
+    state.hideMenu();
+  }
 
   @override
-  _ContextMenuState createState() => _ContextMenuState();
+  _ContextMenuState createState() {
+    state = _ContextMenuState();
+    return state;
+  }
 }
 
 class _ContextMenuState extends State<ContextMenu> {
-  GlobalKey key = GlobalKey();
-  bool visible = false;
+  GlobalKey key;
+  double opacity = 0.0;
+  double menuHeight = 0;
+  double menuWidth = 0;
   double fingerXpos = 0;
   double fingerYpos = 0;
   Color backgroundColor = Colors.black;
   Color iconColor = Colors.white;
   Color textColor = Colors.white;
-  Map<String, IconData> data = {"item1": Icons.star, "item2": Icons.star};
+  Map<String, IconData> data = {"item1": Icons.edit, "item2": Icons.star};
 
   _onTapDown(TapDownDetails details) {
     fingerXpos = details.localPosition.dx;
@@ -61,48 +77,83 @@ class _ContextMenuState extends State<ContextMenu> {
     return view;
   }
 
+  void showMenu(GlobalKey widgetKey) {
+    RenderBox box = widgetKey.currentContext.findRenderObject() as RenderBox;
+    Offset position = box.localToGlobal(Offset.zero); //this is global position
+    print(widgetKey.currentContext.size.width);
+    setState(() {
+      fingerXpos = position.dx -
+          ((menuWidth / 2) - widgetKey.currentContext.size.width / 2);
+      fingerYpos = position.dy - menuHeight;
+      opacity = 1;
+    });
+  }
+
+  void hideMenu() {
+    setState(() {
+      opacity = 0;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    key = GlobalKey();
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: (TapDownDetails details) => _onTapDown(details),
+      behavior: HitTestBehavior.translucent,
+      onTapDown: (TapDownDetails details) {
+        _onTapDown(details);
+        RenderBox box = key.currentContext.findRenderObject() as RenderBox;
+        Offset position =
+            box.localToGlobal(Offset.zero); //this is global position
+        double x = position.dx;
+        double y = position.dy;
+        menuWidth = key.currentContext.size.width;
+        menuHeight = key.currentContext.size.height;
+        double screenWidth = MediaQuery.of(context).size.width;
+        if (screenWidth - fingerXpos < menuWidth) {
+          setState(() {
+            fingerXpos = fingerXpos - menuWidth;
+          });
+        }
+      },
       onTap: () {
         setState(() {
-          visible = false;
+          opacity = 0;
         });
       },
-      onLongPress: () {
-        setState(() {
-          visible = true;
-        });
-        print(key.currentWidget);
-      },
-      child: Container(
-        color: Colors.amber,
-        child: Stack(
-          children: [
-            Visibility(
-              visible: visible,
-              child: Positioned(
-                  top: fingerYpos - 30,
-                  left: fingerXpos,
-                  child: Container(
-                    key: key,
-                    decoration: BoxDecoration(
-                        color: backgroundColor,
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(2))),
-                    // height: 30,
-                    child: Row(
-                      children: [
-                        Row(
-                          children: buildItemsList(data),
-                        )
-                      ],
-                    ),
-                  )),
+      // onLongPress: () {
+      //   setState(() {
+      //     opacity = 1;
+      //   });
+      // },
+      child: Stack(
+        children: [
+          Positioned(
+            top: fingerYpos - 30,
+            left: fingerXpos,
+            child: Opacity(
+              opacity: opacity,
+              child: Container(
+                key: key,
+                decoration: BoxDecoration(
+                    color: backgroundColor,
+                    borderRadius: const BorderRadius.all(Radius.circular(2))),
+                child: Row(
+                  children: [
+                    Row(
+                      children: buildItemsList(data),
+                    )
+                  ],
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
