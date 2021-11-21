@@ -12,7 +12,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        theme: ThemeData(textTheme: GoogleFonts.soraTextTheme()),
+        theme: ThemeData(textTheme: GoogleFonts.jetBrainsMonoTextTheme()),
         home: MyHomePage());
   }
 }
@@ -25,8 +25,21 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  ContextMenu menu = ContextMenu();
+  void showData() {
+    print("data");
+  }
+
+  ContextMenu menu;
   GlobalKey key = GlobalKey();
+
+  _MyHomePageState() {
+    Map<String, Map> data = {
+      "item1": {"icon": Icons.edit, "func": showData},
+      "item2": {"icon": Icons.edit, "func": showData}
+    };
+    menu = ContextMenu(data);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,8 +51,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 height: MediaQuery.of(context).size.height,
                 child: menu),
             Container(
-              margin: EdgeInsets.only(top: 50, left: 30),
+              margin: EdgeInsets.only(top: 210, left: 30),
               child: GestureDetector(
+                  onTapDown: (details) {
+                    menu.getWidgetPosition(details);
+                  },
                   onLongPress: () {
                     menu.showMenu(key);
                   },

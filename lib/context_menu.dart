@@ -5,11 +5,16 @@ import 'package:visibility_detector/visibility_detector.dart';
 
 class ContextMenu extends StatefulWidget {
   _ContextMenuState state;
+  Map data;
 
-  ContextMenu({Key key}) : super(key: key);
+  ContextMenu(this.data, {Key key}) : super(key: key);
+
+  void getWidgetPosition(TapDownDetails details) {
+    state._getFingerPosition(details);
+  }
 
   void showMenu(GlobalKey widgetKey) {
-    state.showMenu(widgetKey);
+    state.showMenuAboveWidget(widgetKey);
   }
 
   void hideMenu() {
@@ -18,38 +23,46 @@ class ContextMenu extends StatefulWidget {
 
   @override
   _ContextMenuState createState() {
-    state = _ContextMenuState();
+    state = _ContextMenuState(data);
     return state;
   }
 }
 
 class _ContextMenuState extends State<ContextMenu> {
   GlobalKey key;
-  double opacity = 0.0;
-  double menuHeight = 0;
-  double menuWidth = 0;
-  double fingerXpos = 0;
-  double fingerYpos = 0;
+  double _opacity = 0.0;
+  double _menuHeight = 0;
+  double _menuWidth = 0;
+
+  double _fingerXpos = 0;
+  double _fingerYpos = 0;
+
   Color backgroundColor = Colors.black;
   Color iconColor = Colors.white;
   Color textColor = Colors.white;
-  Map<String, IconData> data = {"item1": Icons.edit, "item2": Icons.star};
+  Map<String, Map> data;
 
-  _onTapDown(TapDownDetails details) {
-    fingerXpos = details.localPosition.dx;
-    fingerYpos = details.localPosition.dy;
-    // or user the local position method to get the offset
-    print(details.localPosition);
-    print("tap down " + fingerXpos.toString() + ", " + fingerYpos.toString());
+  _ContextMenuState(this.data);
+
+  _getFingerPosition(TapDownDetails details) {
+    if (_opacity == 0) {
+      _fingerXpos = details.localPosition.dx;
+      _fingerYpos = details.localPosition.dy;
+
+      _menuWidth = key.currentContext.size.width;
+      _menuHeight = key.currentContext.size.height;
+    }
   }
 
-  List<Widget> buildItemsList(Map<String, IconData> itemData) {
+  List<Widget> _buildItemsList(Map<String, Map> itemData) {
     List<Widget> view = [];
 
-    itemData.forEach((key, IconData icon) {
+    itemData.forEach((key, Map data) {
       view.add(GestureDetector(
           onLongPress: () {},
-          onTap: () {},
+          onTap: () {
+            data["func"]();
+          },
           child: SizedBox(
             height: 30,
             child: Row(
@@ -57,7 +70,7 @@ class _ContextMenuState extends State<ContextMenu> {
                 Container(
                   margin: const EdgeInsets.only(left: 5),
                   child: Icon(
-                    icon,
+                    data["icon"],
                     color: iconColor,
                     size: 15,
                   ),
@@ -77,21 +90,22 @@ class _ContextMenuState extends State<ContextMenu> {
     return view;
   }
 
-  void showMenu(GlobalKey widgetKey) {
+  void showMenuAboveWidget(GlobalKey widgetKey) {
     RenderBox box = widgetKey.currentContext.findRenderObject() as RenderBox;
-    Offset position = box.localToGlobal(Offset.zero); //this is global position
-    print(widgetKey.currentContext.size.width);
+    Offset widgetPosition = box.localToGlobal(Offset.zero);
+    print(_fingerXpos);
     setState(() {
-      fingerXpos = position.dx -
-          ((menuWidth / 2) - widgetKey.currentContext.size.width / 2);
-      fingerYpos = position.dy - menuHeight;
-      opacity = 1;
+      //Center the menu to the widget
+      _fingerXpos = widgetPosition.dx -
+          ((_menuWidth / 2) - widgetKey.currentContext.size.width / 2);
+      _fingerYpos = widgetPosition.dy - _menuHeight;
+      _opacity = 1;
     });
   }
 
   void hideMenu() {
     setState(() {
-      opacity = 0;
+      _opacity = 0;
     });
   }
 
@@ -106,47 +120,43 @@ class _ContextMenuState extends State<ContextMenu> {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTapDown: (TapDownDetails details) {
-        _onTapDown(details);
+        _getFingerPosition(details);
         RenderBox box = key.currentContext.findRenderObject() as RenderBox;
         Offset position =
             box.localToGlobal(Offset.zero); //this is global position
         double x = position.dx;
         double y = position.dy;
-        menuWidth = key.currentContext.size.width;
-        menuHeight = key.currentContext.size.height;
         double screenWidth = MediaQuery.of(context).size.width;
-        if (screenWidth - fingerXpos < menuWidth) {
+        if (screenWidth - _fingerXpos < _menuWidth) {
           setState(() {
-            fingerXpos = fingerXpos - menuWidth;
+            _fingerXpos = _fingerXpos - _menuWidth;
           });
         }
       },
       onTap: () {
         setState(() {
-          opacity = 0;
+          _opacity = 0;
         });
       },
-      // onLongPress: () {
-      //   setState(() {
-      //     opacity = 1;
-      //   });
-      // },
       child: Stack(
         children: [
           Positioned(
-            top: fingerYpos - 30,
-            left: fingerXpos,
-            child: Opacity(
-              opacity: opacity,
+            top: _fingerYpos - 30,
+            left: _fingerXpos,
+            child: AnimatedOpacity(
+              curve: Curves.decelerate,
+              duration: const Duration(milliseconds: 300),
+              opacity: _opacity,
               child: Container(
+                padding: const EdgeInsets.only(left: 5, right: 5),
                 key: key,
                 decoration: BoxDecoration(
                     color: backgroundColor,
-                    borderRadius: const BorderRadius.all(Radius.circular(2))),
+                    borderRadius: const BorderRadius.all(Radius.circular(4))),
                 child: Row(
                   children: [
                     Row(
-                      children: buildItemsList(data),
+                      children: _buildItemsList(data),
                     )
                   ],
                 ),
