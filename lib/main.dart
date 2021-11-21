@@ -46,10 +46,6 @@ class _MyHomePageState extends State<MyHomePage> {
       body: SafeArea(
         child: Stack(
           children: [
-            SizedBox(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height,
-                child: menu),
             Container(
               margin: EdgeInsets.only(top: 210, left: 30),
               child: GestureDetector(
@@ -57,12 +53,13 @@ class _MyHomePageState extends State<MyHomePage> {
                     menu.getWidgetPosition(details);
                   },
                   onLongPress: () {
-                    menu.showMenu(key);
+                    menu.showMenuAtFingerPosition(key);
                   },
                   onTap: () => menu.hideMenu(),
                   child: Container(
                       key: key, color: Colors.red, height: 100, width: 300)),
             ),
+            menu
           ],
         ),
       ),

@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, no_logic_in_create_state
 
 import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
@@ -13,8 +13,12 @@ class ContextMenu extends StatefulWidget {
     state._getFingerPosition(details);
   }
 
-  void showMenu(GlobalKey widgetKey) {
+  void showMenuAboveWidget(GlobalKey widgetKey) {
     state.showMenuAboveWidget(widgetKey);
+  }
+
+  void showMenuAtFingerPosition(GlobalKey widgetKey) {
+    state.showMenuAtFingerPosition(widgetKey);
   }
 
   void hideMenu() {
@@ -33,6 +37,7 @@ class _ContextMenuState extends State<ContextMenu> {
   double _opacity = 0.0;
   double _menuHeight = 0;
   double _menuWidth = 0;
+  final int _displayVisibilityDuration = 100;
 
   double _fingerXpos = 0;
   double _fingerYpos = 0;
@@ -103,6 +108,17 @@ class _ContextMenuState extends State<ContextMenu> {
     });
   }
 
+  void showMenuAtFingerPosition(GlobalKey widgetKey) {
+    RenderBox box = widgetKey.currentContext.findRenderObject() as RenderBox;
+    Offset widgetPosition = box.localToGlobal(Offset.zero);
+    setState(() {
+      print(_fingerYpos);
+      _fingerYpos += widgetPosition.dy;
+      _fingerXpos += widgetPosition.dx;
+      _opacity = 1;
+    });
+  }
+
   void hideMenu() {
     setState(() {
       _opacity = 0;
@@ -145,7 +161,7 @@ class _ContextMenuState extends State<ContextMenu> {
             left: _fingerXpos,
             child: AnimatedOpacity(
               curve: Curves.decelerate,
-              duration: const Duration(milliseconds: 300),
+              duration: Duration(milliseconds: _displayVisibilityDuration),
               opacity: _opacity,
               child: Container(
                 padding: const EdgeInsets.only(left: 5, right: 5),
