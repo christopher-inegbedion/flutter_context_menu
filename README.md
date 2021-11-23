@@ -62,9 +62,31 @@ Map data = {
 #### Before displaying the menu
 The ```getWidgetPosition(tapdowndetails)``` has to be called on the GestureDetector onTapDown callback and the ```menu.hideMenu()``` method has to be called on the GetstureDetector onTap callback.
 
-### Display options
-1. To show the menu above the widget, call the ```showMenuAboveWidget(wigetKey)``` on the ContextMenu object in the GestureDetector(or equivaluent's) onLongPress callback
+The widget calling the menu has to be wrapped in a container(or equivalent, e.g. SizedBox)
+
+Example
+
+```dart
+Container(
+  margin: EdgeInsets.only(top: 210, left: 30),
+  child: GestureDetector(
+      onTapDown: (details) {
+        menu.getWidgetPosition(details);
+      },
+      onLongPress: () {
+        menu.showMenuAtFingerPosition(key);
+      },
+      onTap: () => menu.hideMenu(),
+      child: Container(
+          key: key, color: Colors.red, height: 100, width: 300)),
+),
 ```
+
+### Display options
+
+1. To show the menu above the widget, call the ```showMenuAboveWidget(wigetKey)``` on the ContextMenu object in the GestureDetector(or equivaluent's) onLongPress callback
+
+```dart
 GestureDetector(
     ...
     onLongPress: () {
@@ -78,7 +100,8 @@ GestureDetector(
 
 ![grid layout](README_assets/context_menu_demo.gif)
 
-2. To display the menu at the point of contact on the widget, call ```showMenuAtFingerPosition(widgetKey)``` on the ContextMenu object in the GestureDetector(or equivaluent's) onLongPress callback
+2. To display the menu at the point of contact on the widget, call ```showMenuAtFingerPosition(widgetKey)```
+on the ContextMenu object in the GestureDetector(or equivaluent's) onLongPress callback
 ```
 GestureDetector(
     ...

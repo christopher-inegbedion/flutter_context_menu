@@ -31,6 +31,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   ContextMenu menu;
   GlobalKey key = GlobalKey();
+  GlobalKey key1 = GlobalKey();
 
   _MyHomePageState() {
     Map<String, Map> data = {
@@ -47,17 +48,30 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Stack(
           children: [
             Container(
-              margin: EdgeInsets.only(top: 210, left: 30),
+              margin: EdgeInsets.only(top: 100),
               child: GestureDetector(
                   onTapDown: (details) {
                     menu.getWidgetPosition(details);
                   },
                   onLongPress: () {
-                    menu.showMenuAtFingerPosition(key);
+                    menu.showMenuAboveWidget(key);
                   },
                   onTap: () => menu.hideMenu(),
                   child: Container(
                       key: key, color: Colors.red, height: 100, width: 300)),
+            ),
+            Container(
+              margin: EdgeInsets.only(top: 300),
+              child: GestureDetector(
+                  onTapDown: (details) {
+                    menu.getWidgetPosition(details);
+                  },
+                  onLongPress: () {
+                    menu.showMenuAtFingerPosition(key1);
+                  },
+                  onTap: () => menu.hideMenu(),
+                  child: Container(
+                      key: key1, color: Colors.green, height: 100, width: 300)),
             ),
             menu
           ],
